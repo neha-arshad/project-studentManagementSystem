@@ -8,18 +8,20 @@ class Student {
 	name: string;
 	coursesEnrolled: string[];
 	balance: number;
-
+	
 	constructor(
 		name: string,
 		ID: string,
 		coursesEnrolled: string[],
-		balance: number)
+		balance: number,)
 {
 	this.ID = ID;
 	this.name = name;
 	this.coursesEnrolled = coursesEnrolled;
 	this.balance = balance;
+	
 }
+
 enrollCourse(course: string, courseFee: number): void {
 	this.coursesEnrolled.push(course);
 	this.balance -= courseFee;
@@ -79,7 +81,7 @@ let { course }  = await inquirer.prompt(
 	}
 );
 let courseFee: number = 0;{
-	switch (course) {
+	switch (course.toLowerCase()) {
 		case "Typescrit":
 			courseFee = 5000;
 			break;
@@ -95,33 +97,31 @@ let courseFee: number = 0;{
 						break;
 	}
 }
-//if (initialBalance <= courseFee){
-	//console.log(chalk.red("\nInsufficient balance."));
-//}
+// if (initialBalance < courseFee){
+// 	console.log(chalk.red.bold.italic("Insufficient balance ❌"));
+// 	return;
+// }
 
 let {courseConfirmation} = await inquirer.prompt(
 	{
 		type: "confirm",
 		name: "courseConfirmation",
 		message: chalk.bold.blueBright("Are you sure you want to enroll in this course?"),
-		default: true,
+		
 	}
 );
 
 
-if (courseConfirmation === true){
+if (courseConfirmation === true && initialBalance <= courseFee){
+	console.log("Insufficient balance")
 
 let student = new Student(trimmedStudentName,studentID,[course],(initialBalance));
 students.push(student);
 
 console.log(chalk.bold.magentaBright("\nYou have successfully enrolled!"));
 }
-else if (initialBalance <= courseFee){
-	console.log(chalk.red("\nInsufficient balance."));
-}
 
 }
-
 else {
 	 console.log(chalk.red("\nName already exists or invalid name."));
 	}
@@ -171,9 +171,10 @@ async function depositCash() {
 ]);
 
 let foundStudent = students.find((student) => student.name === studentName);
-foundStudent!.depositCash((amount));
+foundStudent?.depositCash((amount));
 
-console.log(chalk.green("\nCash deposited successfully."));
+console.log(chalk.green("\nCash deposited successfully.\n"));
+console.log(`Now your Blance is ${amount}`);
 }
 
 async function payFees() {
@@ -199,7 +200,7 @@ async function payFees() {
 	]);
 	
 	let foundStudent = students.find((student) => student.name === studentName);
-	foundStudent!.payFees((amount));
+	foundStudent?.payFees((amount));
 	
 	console.log(chalk.green("\nFees paid successfully."));
 }
@@ -216,7 +217,27 @@ async function viewBalance() {
 
 let foundStudent = students.find((student) => student.name === studentName);
 
-console.log(chalk.yellow(`\nCurrent balance of ${foundStudent!.name}:${foundStudent!.viewBalance()}`));
+console.log(chalk.yellow(`\nCurrent balance of ${foundStudent?.name}:${foundStudent?.viewBalance()}`));
+}
+
+async function addStudent() {
+  let { studentName } = await inquirer.prompt({
+    type: "input",
+    name: "studentName",
+    message: chalk.bold.blueBright("Enter student name:"),
+  });
+
+  let trimmedStudentName = studentName.trim().toLowerCase();
+  let studentNamesCheck = students.map((obj) => obj.name);
+
+  if (!studentNamesCheck.includes(trimmedStudentName) && trimmedStudentName !== "") {
+    baseID++;
+    let studentID = "STID" + baseID;
+    console.log(chalk.green("\n✨ Student account created."));
+
+    console.log(chalk.bold.green(`\tWelcome, ${trimmedStudentName}!\n`));
+	
+	}
 }
 
 async function main() {
@@ -227,6 +248,7 @@ async function main() {
       name: "action",
       message: chalk.bold.blueBright("Please select an action:"),
       choices: [
+				chalk.cyan("Add Student"),
         chalk.cyan("Enroll a student"),
         chalk.cyan("Show student status"),
         chalk.cyan("Deposit cash"),
@@ -237,6 +259,11 @@ async function main() {
     });
 
     switch (action) {
+
+			case chalk.cyan("Add Student"):
+				await addStudent();
+				break;
+
       case chalk.cyan("Enroll a student"):
         await enrollStudent();
         break;
@@ -273,5 +300,6 @@ async function main() {
   }
 while (continueEnrollment);
 }
+
 
 main();
