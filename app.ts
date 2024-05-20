@@ -1,141 +1,277 @@
 
-
 import inquirer from "inquirer";
 import chalk from "chalk";
+
 
 class Student {
 	ID: string;
 	name: string;
 	coursesEnrolled: string[];
-	feesAmount: number;
+	balance: number;
 
-constructor(
-	name: string,
-	ID: string,
-	coursesEnrolled: string[],
-	feesAmount: number)
-	{
-		this.ID = ID;
-		this.name = name;
-		this.coursesEnrolled = coursesEnrolled;
-		this.feesAmount = feesAmount;
-	 }
-};
-//variable
+	constructor(
+		name: string,
+		ID: string,
+		coursesEnrolled: string[],
+		balance: number)
+{
+	this.ID = ID;
+	this.name = name;
+	this.coursesEnrolled = coursesEnrolled;
+	this.balance = balance;
+}
+enrollCourse(course: string, courseFee: number): void {
+	this.coursesEnrolled.push(course);
+	this.balance -= courseFee;
+}
+payFees(amount: number): void {
+	this.balance -= amount;
+}
+depositCash(amount: number): void {
+	this.balance += amount;
+}
+viewBalance(): number {
+	return this.balance;
+}
+showStatus(): void {
+	console.log(chalk.bold.yellow("\nStudent Information:"));
+	console.log("Name:", this.name);
+	console.log("ID:", this.ID);
+	console.log("Courses Enrolled:", this.coursesEnrolled.join(", "));
+	console.log("Balance:", this.balance);
+}
+}
+
 let baseID = 10000;
-let studentID: string = "";
-let continueEnrollment:boolean = true;
-
 let students: Student[] = [];
 
-do {
-	let { action } = await inquirer.prompt(
-    {
-			type: "list",
-			name: "action",
-			message: chalk.bold.blueBright(" Please select an action:\n"),
-			choices: [
-				chalk.cyan("Enroll a student"),
-				chalk.cyan("Show student status"),
-			 ],
-			}
+async function enrollStudent() {
+	let { studentName } = await inquirer.prompt(
+		{
+			type: "input",
+			name: "studentName",
+			message: chalk.bold.blueBright("Enter your name:"),
+		}
 );
-
-if (action === chalk.cyan("Enroll a student")) {
-		let { studentName } = await inquirer.prompt(
-			{
-				type: "input",
-				 name: "studentName",
-				 message: chalk.bold.blueBright(" Enter your name:"),
-				}
-	);
 
 let trimmedStudentName: string = studentName.trim().toLowerCase();
-let studentNamesCheck: string[] = students.map((obj) => obj.name);//all studentname
-if (studentNamesCheck.includes(trimmedStudentName) === false) {
-	if (trimmedStudentName !== "") {
-	baseID++;
-		studentID = "STID" + baseID;
-		console.log(chalk.green("\n\t✨ Your account has been created."));
-		console.log(chalk.bold.green(`\t\tWelcome, ${trimmedStudentName}!\n`));
+let studentNamesCheck: string[] = students.map((obj) => obj.name);
 
-let { course } = await inquirer.prompt(
+if (!studentNamesCheck.includes(trimmedStudentName) &&trimmedStudentName !== "") {
+	baseID++;
+	let studentID: string = "STID" + baseID;
+	console.log(chalk.green("\n✨ Your account has been created."));
+
+	console.log(chalk.bold.green(`\tWelcome, ${trimmedStudentName}!\n`));
+
+	let { initialBalance } = await inquirer.prompt(
+		{
+			type: "input",
+			name: "initialBalance",
+			message: chalk.bold.blueBright("Enter initial balance:"),
+		}
+);
+let { course }  = await inquirer.prompt(
 	{
-		type: "list",
+		type: "input",
 		name: "course",
-		message: chalk.bold.yellow("📖 Please select a course:"),
-		choices: ["TypeScript", "JavaScript", "Node.JS"],
+		message: chalk.bold.blueBright("Enter course name: ")
+	}
+);
+let courseFee: number = 0;{
+	switch (course) {
+		case "Typescrit":
+			courseFee = 5000;
+			break;
+
+			case "javaSript":
+				courseFee = 4000;
+				break;
+
+				case "python":
+					courseFee = 3000;
+					break
+					default:
+						break;
+	}
+}
+//if (initialBalance <= courseFee){
+	//console.log(chalk.red("\nInsufficient balance."));
+//}
+
+let {courseConfirmation} = await inquirer.prompt(
+	{
+		type: "confirm",
+		name: "courseConfirmation",
+		message: chalk.bold.blueBright("Are you sure you want to enroll in this course?"),
+		default: true,
 	}
 );
 
-let courseFees = 0;
-switch (course) 
-{
-	case "TypeScript":
-		courseFees = 500;
-		break;
 
-		case "JavaSript":
-		courseFees = 1000;
-		break;
+if (courseConfirmation === true){
 
-		case "Node.JS":
-		courseFees = 200;
-		break;
-		default:
-		break;
-				}
-		
-		let { courseConfirmation } = await inquirer.prompt(
-			{
-				type: "confirm",
-				name: "courseConfirmation",
-				message: chalk.bold.yellow(`💰 Do you want to enroll in the ${course} course for $${courseFees}?`),
-			}
-	);
-if (courseConfirmation === true) {
-	let student = new Student(trimmedStudentName,studentID,[course],courseFees);
-	students.push(student);
-	console.log(chalk.bold.magentaBright("\n\t🎉 You have successfully enrolled in the course!\n"));
+let student = new Student(trimmedStudentName,studentID,[course],(initialBalance));
+students.push(student);
+
+console.log(chalk.bold.magentaBright("\nYou have successfully enrolled!"));
 }
+else if (initialBalance <= courseFee){
+	console.log(chalk.red("\nInsufficient balance."));
 }
- else {
-	console.log(chalk.red("\n\t❌ Invalid name.\n"));
+
 }
-	} 
+
 else {
-	 console.log(chalk.red.bold("\n\t ⚠️  Name already exists.\n"));
+	 console.log(chalk.red("\nName already exists or invalid name."));
 	}
 }
-else if (action === chalk.cyan("Show student status")) {
+
+async function showStudentStatus() {
 	if (students.length !== 0) {
 		let studentNames = students.map((student) => student.name);
 		let { selectedStudent } = await inquirer.prompt(
+		{
+			type: "list",
+			name: "selectedStudent",
+			message: chalk.bold.yellow("\nPlease select a student:"),
+			choices: studentNames,
+		}
+	);
+	
+	let foundStudent = students.find((student) => student.name === selectedStudent);
+	foundStudent!.showStatus();
+}
+
+else{
+	console.log(chalk.red("\nRecord is Empty, First Enroll a Student."));
+}
+}
+
+async function depositCash() {
+	let { studentName, amount } = await inquirer.prompt(
+		[
 			{
 				type: "list",
-				name: "selectedStudent",
-				message: chalk.bold.yellow("\n🔍 Please select a student:"),
-				choices: studentNames,
+				name: "studentName",
+				message: chalk.bold.blueBright("Select a student:"),
+				choices: students.map((student) => student.name),
+		},
+			{
+				type: "input",
+				name: "amount",
+				message: chalk.bold.blueBright("Enter amount to deposit:"),
+				validate: (value: any) => {
+					if (isNaN(value) || value <= 0) {
+						return "Please enter a valid amount.";
 			}
-	);
-	let foundStudent = students.find((student) => student.name === selectedStudent);
-	console.log(chalk.bold.yellow("\n\t📝 Student Information:"));
-	console.log(foundStudent);
-	console.log("\n");
- } 
-else {
-	console.log(chalk.red("\n\t❌ Record is Empty, First Enroll a Student.\n"));
+			return true;
+		},
+	},
+]);
+
+let foundStudent = students.find((student) => student.name === studentName);
+foundStudent!.depositCash((amount));
+
+console.log(chalk.green("\nCash deposited successfully."));
 }
+
+async function payFees() {
+	let { studentName, amount } = await inquirer.prompt(
+		[
+			{
+				type: "list",
+				name: "studentName",
+				message: chalk.bold.blueBright("Select a student:"),
+				choices: students.map((student) => student.name),
+			},
+    {
+			type: "input",
+			name: "amount",
+			message: chalk.bold.blueBright("Enter amount to pay:"),
+			validate: (value: any) => {
+				if (isNaN(value) || value <= 0) {
+					return "Please enter a valid amount.";
+		}
+				return true;
+			},
+		},
+	]);
+	
+	let foundStudent = students.find((student) => student.name === studentName);
+	foundStudent!.payFees((amount));
+	
+	console.log(chalk.green("\nFees paid successfully."));
 }
-let { userConfirmation } = await inquirer.prompt(
-	{
-		type: "confirm",
-		name: "userConfirmation",
-		message: chalk.bold.yellow("🔄 Do you want to continue?"),
-	}
+
+async function viewBalance() {
+	let { studentName } = await inquirer.prompt(
+		{
+			type: "list",
+			name: "studentName",
+			message: chalk.bold.blueBright("Select a student:"),
+			choices: students.map((student) => student.name),
+		}
 );
-if (userConfirmation === false) {
-	continueEnrollment = false;
-};
+
+let foundStudent = students.find((student) => student.name === studentName);
+
+console.log(chalk.yellow(`\nCurrent balance of ${foundStudent!.name}:${foundStudent!.viewBalance()}`));
 }
+
+async function main() {
+	let continueEnrollment: boolean = true;
+	do {
+    let { action } = await inquirer.prompt({
+      type: "list",
+      name: "action",
+      message: chalk.bold.blueBright("Please select an action:"),
+      choices: [
+        chalk.cyan("Enroll a student"),
+        chalk.cyan("Show student status"),
+        chalk.cyan("Deposit cash"),
+        chalk.cyan("Pay fees"),
+        chalk.cyan("View balance"),
+        chalk.cyan("Exit"),
+      ],
+    });
+
+    switch (action) {
+      case chalk.cyan("Enroll a student"):
+        await enrollStudent();
+        break;
+
+      case chalk.cyan("Show student status"):
+        await showStudentStatus();
+        break;
+
+      case chalk.cyan("Deposit cash"):
+        await depositCash();
+        break;
+
+      case chalk.cyan("Pay fees"):
+        await payFees();
+        break;
+
+      case chalk.cyan("View balance"):
+        await viewBalance();
+        break;
+      default:
+        continueEnrollment = false;
+        break;
+    }
+
+    let { userConfirmation } = await inquirer.prompt({
+      type: "confirm",
+      name: "userConfirmation",
+      message: chalk.bold.yellow("Do you want to continue?"),
+    });
+
+    if (userConfirmation === false) {
+      continueEnrollment = false;
+    }
+  }
 while (continueEnrollment);
+}
+
+main();
