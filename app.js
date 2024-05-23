@@ -47,16 +47,30 @@ async function enrollStudent() {
         let studentID = "STID" + baseID;
         console.log(chalk.green("\n✨ Your account has been created."));
         console.log(chalk.bold.green(`\tWelcome, ${trimmedStudentName}!\n`));
-        let { initialBalance } = await inquirer.prompt({
-            type: "input",
-            name: "initialBalance",
-            message: chalk.bold.blueBright("Enter initial balance:"),
-        });
-        let { course } = await inquirer.prompt({
-            type: "input",
-            name: "course",
-            message: chalk.bold.blueBright("Enter course name: ")
-        });
+        // 	let { initialBalance } = await inquirer.prompt(
+        // 		{
+        // 			type: "number",
+        // 			name: "initialBalance",
+        // 			message: chalk.bold.blueBright("Enter initial balance:"),
+        // 		}
+        // );
+        let { course } = await inquirer.prompt([{
+                type: "list",
+                name: "course",
+                message: chalk.bold.blueBright("Select a course: "),
+                choices: [
+                    { name: "Typescript ($5000)", value: "Typescript", fee: 5000 },
+                    { name: "Javascript ($4000)", value: "Javascript", fee: 4000 },
+                    { name: "Python ($3000)", value: "Python", fee: 3000 }
+                ]
+            }
+        ]);
+        // let initialBalanceNumber = Number(initialBalance)
+        // let courseFee = course.fee;
+        // if (initialBalanceNumber < courseFee) {
+        // 	console.log(chalk.red("\nInsufficient balance."));
+        // 	return;
+        // }
         let courseFee = 0;
         {
             switch (course.toLowerCase()) {
@@ -73,17 +87,17 @@ async function enrollStudent() {
                     break;
             }
         }
-        if (initialBalance < courseFee) {
-            console.log(chalk.red.bold.italic("Insufficient balance ❌"));
-            return;
-        }
+        // if (initialBalance < courseFee){
+        // 	console.log(chalk.red.bold.italic("Insufficient balance ❌"));
+        // 	return;
+        // }
         let { courseConfirmation } = await inquirer.prompt({
             type: "confirm",
             name: "courseConfirmation",
             message: chalk.bold.blueBright("Are you sure you want to enroll in this course?"),
         });
         if (courseConfirmation === true) {
-            let student = new Student(trimmedStudentName, studentID, [course], (initialBalance));
+            let student = new Student(trimmedStudentName, studentID, [course], 0);
             students.push(student);
             console.log(chalk.bold.magentaBright("\nYou have successfully enrolled!"));
         }
@@ -117,7 +131,7 @@ async function depositCash() {
             choices: students.map((student) => student.name),
         },
         {
-            type: "input",
+            type: "number",
             name: "amount",
             message: chalk.bold.blueBright("Enter amount to deposit:"),
             validate: (value) => {
@@ -142,7 +156,7 @@ async function payFees() {
             choices: students.map((student) => student.name),
         },
         {
-            type: "input",
+            type: "number",
             name: "amount",
             message: chalk.bold.blueBright("Enter amount to pay:"),
             validate: (value) => {

@@ -1,6 +1,6 @@
 {
-  "name": "project-studentmanagementsystem",
-  "version": "1.0.0",
+  "name": "@neha.dev/project-studentmanagementsystem",
+  "version": "1.0.1",
   "description": "",
   "main": "app.js",
   "type": "module",

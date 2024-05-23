@@ -1,7 +1,7 @@
+#! usr/bin/env node
 
 import inquirer from "inquirer";
 import chalk from "chalk";
-
 
 class Student {
 	ID: string;
@@ -26,6 +26,7 @@ enrollCourse(course: string, courseFee: number): void {
 	this.coursesEnrolled.push(course);
 	this.balance -= courseFee;
 }
+
 payFees(amount: number): void {
 	this.balance -= amount;
 }
@@ -66,20 +67,18 @@ if (!studentNamesCheck.includes(trimmedStudentName) &&trimmedStudentName !== "")
 
 	console.log(chalk.bold.green(`\tWelcome, ${trimmedStudentName}!\n`));
 
-	let { initialBalance } = await inquirer.prompt(
-		{
-			type: "input",
-			name: "initialBalance",
-			message: chalk.bold.blueBright("Enter initial balance:"),
-		}
-);
 let { course }  = await inquirer.prompt(
-	{
-		type: "input",
+	[{
+		type: "list",
 		name: "course",
-		message: chalk.bold.blueBright("Enter course name: ")
+		message: chalk.bold.blueBright("Select a course: "),
+		choices:[
+		{ name: "Typescript ($5000)", value: "Typescript", fee: 5000 },
+		{ name: "Javascript ($4000)", value: "Javascript", fee: 4000 },
+		{ name: "Python ($3000)", value: "Python", fee: 3000 } ]
 	}
-);
+]);
+
 let courseFee: number = 0;{
 	switch (course.toLowerCase()) {
 		case "Typescrit":
@@ -97,10 +96,6 @@ let courseFee: number = 0;{
 						break;
 	}
 }
-// if (initialBalance < courseFee){
-// 	console.log(chalk.red.bold.italic("Insufficient balance ❌"));
-// 	return;
-// }
 
 let {courseConfirmation} = await inquirer.prompt(
 	{
@@ -112,10 +107,9 @@ let {courseConfirmation} = await inquirer.prompt(
 );
 
 
-if (courseConfirmation === true && initialBalance <= courseFee){
-	console.log("Insufficient balance")
+if (courseConfirmation === true){
 
-let student = new Student(trimmedStudentName,studentID,[course],(initialBalance));
+let student = new Student(trimmedStudentName,studentID,[course],0);
 students.push(student);
 
 console.log(chalk.bold.magentaBright("\nYou have successfully enrolled!"));
@@ -148,6 +142,8 @@ else{
 }
 }
 
+
+
 async function depositCash() {
 	let { studentName, amount } = await inquirer.prompt(
 		[
@@ -158,7 +154,7 @@ async function depositCash() {
 				choices: students.map((student) => student.name),
 		},
 			{
-				type: "input",
+				type: "number",
 				name: "amount",
 				message: chalk.bold.blueBright("Enter amount to deposit:"),
 				validate: (value: any) => {
@@ -187,7 +183,7 @@ async function payFees() {
 				choices: students.map((student) => student.name),
 			},
     {
-			type: "input",
+			type: "number",
 			name: "amount",
 			message: chalk.bold.blueBright("Enter amount to pay:"),
 			validate: (value: any) => {
